@@ -1,4 +1,4 @@
-const CACHE = 'clean-water-v18-aqua-20261006';
+const CACHE = 'clean-water-v19-aqua-20261008';
 const APP = [
   './',
   'index.html',
@@ -12,6 +12,7 @@ const APP = [
   'manifest.json',
   'styles.css',
   'app.js',
+  'menu.js',
   'assets/icon-192.png',
   'assets/logo.png'
 ];

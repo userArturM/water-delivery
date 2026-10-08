@@ -704,7 +704,7 @@ updateCart();
 
 const menuBtn = document.querySelector('.menu-btn');
 const mobileMenu = document.getElementById('mobileMenu');
-if (menuBtn && mobileMenu) menuBtn.addEventListener('click', () => mobileMenu.classList.toggle('open'));
+
 
 /* ===== Главная: карусель ассортимента и счётчики ===== */
 (function initHomeExtras(){
@@ -764,9 +764,3 @@ if (menuBtn && mobileMenu) menuBtn.addEventListener('click', () => mobileMenu.cl
   }
 })();
 
-/* Мобильное меню плавающее: закрываем его при прокрутке страницы */
-(function(){
-  const m = document.getElementById('mobileMenu');
-  if (!m) return;
-  window.addEventListener('scroll', () => { if (m.classList.contains('open') && window.scrollY > 60) m.classList.remove('open'); }, { passive: true });
-})();
