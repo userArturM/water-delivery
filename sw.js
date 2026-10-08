@@ -1,4 +1,4 @@
-const CACHE = 'clean-water-v19-aqua-20261008';
+const CACHE = 'clean-water-v20-aqua-20261008';
 const APP = [
   './',
   'index.html',
@@ -8,13 +8,33 @@ const APP = [
   'delivery-payment.html',
   'faq.html',
   'contacts.html',
+  'returns.html',
+  'requisites.html',
+  'offer.html',
+  'privacy.html',
+  'consent.html',
   '404.html',
   'manifest.json',
   'styles.css',
   'app.js',
   'menu.js',
   'assets/icon-192.png',
-  'assets/logo.png'
+  'assets/icon-512.png',
+  'assets/logo.png',
+  'assets/bottles.webp',
+'assets/tara.webp',
+  'assets/water/kristalnaya.webp',
+  'assets/water/prirodny-istochnik.webp',
+  'assets/water/piligrim.webp',
+  'assets/water/dombay.webp',
+  'assets/water/dysheps.webp',
+  'assets/water/kubai.webp',
+  'assets/water/pompakran.webp',
+  'assets/water/gornaya-vershina.webp',
+  'assets/water/chernogolovka.webp',
+  'assets/water/pompa.webp',
+  'assets/water/belaya-ruka.webp',
+  'assets/water/arkhyz.webp'
 ];
 
 self.addEventListener('install', event => {

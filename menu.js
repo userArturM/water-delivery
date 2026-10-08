@@ -7,6 +7,8 @@
   function set(open) {
     menu.classList.toggle('open', open);
     btn.setAttribute('aria-expanded', open ? 'true' : 'false');
+    btn.setAttribute('aria-label', open ? 'Закрыть меню' : 'Открыть меню');
+    menu.setAttribute('aria-hidden', open ? 'false' : 'true');
     y0 = window.pageYOffset || 0;
   }
   btn.setAttribute('aria-controls', 'mobileMenu');
