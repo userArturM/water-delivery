@@ -1,4 +1,4 @@
-const CACHE = 'clean-water-v20-aqua-20261008';
+const CACHE = 'clean-water-v21-20261008';
 const APP = [
   './',
   'index.html',
@@ -21,8 +21,15 @@ const APP = [
   'assets/icon-192.png',
   'assets/icon-512.png',
   'assets/logo.png',
+  'assets/hero-splash.svg',
+  'assets/band-leaves.svg',
+  'assets/water-pattern.svg',
+  'assets/about-card.webp',
+  'assets/largus-route.svg',
+  'favicon.ico',
+  'favicon.png',
   'assets/bottles.webp',
-'assets/tara.webp',
+  'assets/tara.webp',
   'assets/water/kristalnaya.webp',
   'assets/water/prirodny-istochnik.webp',
   'assets/water/piligrim.webp',
@@ -62,7 +69,7 @@ self.addEventListener('fetch', event => {
         }
         return res;
       }).catch(() =>
-        caches.match(req).then(r => r || caches.match('404.html') || caches.match('index.html'))
+        caches.match(req).then(r => r || (req.mode === 'navigate' ? caches.match('index.html') : Response.error()))
       )
     );
   } else {

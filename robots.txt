@@ -1,3 +1,4 @@
 User-agent: *
 Allow: /
+Disallow: /send-order.php
 Sitemap: https://xn----7sbbhku9buj1cwf.site/sitemap.xml

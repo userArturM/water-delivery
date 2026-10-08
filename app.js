@@ -52,7 +52,7 @@ function markActiveNavigation() {
   document.querySelectorAll('.nav-links a, .mobile-menu a').forEach(link => {
     const href = (link.getAttribute('href') || '').split('#')[0].split('?')[0].toLowerCase();
     link.classList.toggle('is-active', href === navCurrent || (current === 'index.html' && href === 'index.html'));
-    link.setAttribute('aria-current', href === navCurrent ? 'page' : 'false');
+    if (href === navCurrent) link.setAttribute('aria-current', 'page'); else link.removeAttribute('aria-current');
   });
 }
 
@@ -111,7 +111,7 @@ initSiteFooter();
     const href = (link.getAttribute('href') || '').split('#')[0].split('?')[0].toLowerCase();
     const active = href === current || href === footerCurrent;
     link.classList.toggle('is-accent', active);
-    link.setAttribute('aria-current', active ? 'page' : 'false');
+    if (active) link.setAttribute('aria-current', 'page'); else link.removeAttribute('aria-current');
   });
 })();
 markActiveNavigation();
@@ -183,8 +183,6 @@ const cartFab = document.getElementById('cartFab');
 const fabCount = document.getElementById('fabCount');
 const cartClear = document.getElementById('cartClear');
 const storeAddress = document.getElementById('storeAddress');
-const cartFabMobile = document.getElementById('cartFabMobile');
-const fabCountMobile = document.getElementById('fabCountMobile');
 const orderSuccess = document.getElementById('orderSuccess');
 const successClose = document.getElementById('successClose');
 const cartTotal = document.getElementById('cartTotal');
@@ -285,7 +283,7 @@ function render() {
 function flyToCart(btn) {
   const rect = btn.getBoundingClientRect();
   const targetFab = cartFab;
-  if (!targetFab) return;
+  if (!targetFab || (window.matchMedia && matchMedia('(prefers-reduced-motion: reduce)').matches)) return;
   const fab = targetFab.getBoundingClientRect();
   const el = document.createElement('div');
   el.className = 'fly-item';
@@ -348,7 +346,6 @@ function updateCart() {
   if (cartFab) cartFab.classList.toggle('has-items', total > 0);
   const countText = itemCount > 99 ? '99+' : String(itemCount);
   if (fabCount) fabCount.textContent = countText;
-  if (fabCountMobile) fabCountMobile.textContent = countText;
   if (cartTotal) cartTotal.textContent = money(total);
   if (cartClear) cartClear.classList.toggle('show', total > 0);
   if (cartRecommendations) cartRecommendations.hidden = total <= 0;
@@ -358,7 +355,7 @@ function updateCart() {
   });
   if (detailsTotal) detailsTotal.textContent = money(total);
   document.querySelectorAll('[data-quick-add]').forEach(b => {
-    const w = waters[Number(b.dataset.quickAdd)];
+    const w = waters.find(x => x[0] === b.dataset.quickAdd);
     const s = b.querySelector('small');
     if (w && s) s.textContent = w[6] + ' л · ' + money(priceOf(w));
   });
@@ -379,7 +376,7 @@ function updateCart() {
   if (total <= 0) closeCart();
 
   const receive = mode === 'delivery' ? 'доставка' : 'самовывоз';
-  const lines = [`Здравствуйте! Хочу заказать (${receive}${mode === 'delivery' ? ', ' + TOWNS[town] : ''}):`];
+  const lines = [`Заказ с сайта (${receive}${mode === 'delivery' ? ', ' + TOWNS[town] : ''}):`];
   let n = 0;
   waters.forEach((w, i) => {
     const q = qty[i] || 0;
@@ -408,28 +405,34 @@ function updateCart() {
   if (orderAddress) orderAddress.required = needsAddress;
   if (orderAddress) orderAddress.placeholder = needsAddress ? 'Адрес доставки *' : 'Адрес / примечание';
   if (orderDate) orderDate.required = needsAddress;
-  if (orderPhone) orderPhone.required = needsAddress;
+  if (orderPhone) orderPhone.required = true;
   if (orderDate) orderDate.disabled = !needsAddress;
 }
 
 function openCart() {
-  if (!cartPanel || !cartFab || !cartFab.classList.contains('has-items')) return;
+  if (!cartPanel || !cartFab) return;
+  if (!cartFab.classList.contains('has-items')) { toast('Корзина пуста — выберите воду в каталоге'); return; }
+  lastFocus = document.activeElement;
   cartStepProducts.hidden = false;
   cartStepDetails.hidden = true;
   cartTitle.textContent = 'Ваша корзина';
   cartPanel.classList.add('open');
   cartBackdrop.classList.add('open');
   document.body.style.overflow = 'hidden';
+  setTimeout(() => document.getElementById('cartClose')?.focus(), 50);
 }
 
+let lastFocus = null;
 function closeCart() {
   if (!cartPanel) return;
+  const wasOpen = cartPanel.classList.contains('open');
   cartPanel.classList.remove('open');
   cartBackdrop.classList.remove('open');
   document.body.style.overflow = '';
   cartStepDetails.hidden = true;
   cartStepProducts.hidden = false;
   cartTitle.textContent = 'Ваша корзина';
+  if (wasOpen && lastFocus && lastFocus.focus) { try { lastFocus.focus(); } catch (_) {} }
 }
 
 if (cartFab) cartFab.addEventListener('click', openCart);
@@ -441,7 +444,7 @@ cartNext?.addEventListener('click', () => {
   cartStepProducts.hidden = true;
   cartStepDetails.hidden = false;
   cartTitle.textContent = 'Данные заказа';
-  setTimeout(() => orderName.focus(), 150);
+  if (!(window.matchMedia && matchMedia('(pointer: coarse)').matches)) setTimeout(() => orderName.focus(), 150);
 });
 cartBack?.addEventListener('click', () => {
   cartStepDetails.hidden = true;
@@ -470,13 +473,8 @@ async function sendOrderCopyByEmail() {
     const res = await fetch('./send-order.php', {
       method: 'POST', body: data, keepalive: true, credentials: 'same-origin'
     });
-    if (!res.ok && res.status !== 204) {
-      toast('Не удалось отправить заказ на e-mail. Попробуйте ещё раз.');
-      return false;
-    }
-    return true;
+    return res.ok || res.status === 204;
   } catch (_) {
-    toast('Не удалось отправить заказ на e-mail. Попробуйте ещё раз.');
     return false;
   }
 }
@@ -510,12 +508,12 @@ document.addEventListener('click', e => {
 document.addEventListener('click', e => {
   const b = e.target.closest('[data-quick-add]');
   if (!b) return;
-  const i = Number(b.dataset.quickAdd);
-  if (!Number.isInteger(i) || !waters[i]) return;
+  const i = waters.findIndex(w => w[0] === b.dataset.quickAdd);
+  if (i < 0) return;
   qty[i] = (qty[i] || 0) + 1;
   updateCart();
   goal('quick_add_to_cart');
-  toast(`${waters[i][1]} добавлена в корзину`);
+  toast(`Добавлено в корзину: ${waters[i][1]}`);
 });
 
 document.querySelectorAll('#modeSwitch button').forEach(btn => {
@@ -592,7 +590,11 @@ if (offerConsent) offerConsent.checked = false;
 
 document.querySelectorAll('#modeSwitch button').forEach(b => b.classList.toggle('active', b.dataset.mode === mode));
 
-document.addEventListener('keydown', e => { if (e.key === 'Escape') closeCart(); });
+document.addEventListener('keydown', e => {
+  if (e.key !== 'Escape') return;
+  if (orderSuccess && orderSuccess.classList.contains('show')) orderSuccess.classList.remove('show');
+  else closeCart();
+});
 
 [orderName, orderAddress, orderPhone, orderComment].filter(Boolean).forEach(el => el.classList.add('ym-disable-keys'));
 
@@ -614,9 +616,7 @@ if (emailOrder) {
       if (!orderAddress.value.trim()) return bad(orderAddress, 'Укажите адрес доставки');
       if (!orderDate.value) return bad(orderDate, 'Выберите дату доставки');
     }
-    if (mode === 'delivery' || orderPhone.value.trim()) {
-      if (orderPhone.value.replace(/\D/g, '').length < 10) return bad(orderPhone, 'Укажите телефон (не меньше 10 цифр)');
-    }
+    if (orderPhone.value.replace(/\D/g, '').length < 11) return bad(orderPhone, 'Укажите телефон полностью: +7 (999) 123-45-67');
 
     emailOrder.disabled = true;
     emailOrder.classList.add('is-loading');
@@ -625,7 +625,7 @@ if (emailOrder) {
     emailOrder.classList.remove('is-loading');
 
     if (!sent) {
-      toast('Не удалось отправить заказ на почту. Попробуйте ещё раз.');
+      toast('Не удалось отправить заказ. Попробуйте ещё раз или позвоните: +7 928 223-53-33');
       return;
     }
 
@@ -633,6 +633,7 @@ if (emailOrder) {
       localStorage.setItem('cw_last_order_v2', JSON.stringify({qty:{...qty}, mode, town}));
     } catch (_) {}
     goal('order_email');
+    resetAfterOrder();
     showSuccess();
   });
 }
@@ -681,6 +682,16 @@ if (successRepeat) successRepeat.addEventListener('click', () => {
 
 
 
+function resetAfterOrder() {
+  Object.keys(qty).forEach(k => qty[k] = 0);
+  window.__orderNumber = null;
+  [orderName, orderAddress, orderDate, orderPhone, orderComment].forEach(el => { if (el) el.value = ''; });
+  if (orderPayment) orderPayment.value = '';
+  consentChecks.forEach(c => { c.checked = false; });
+  updateCart();
+  closeCart();
+}
+
 function showSuccess() {
   if (successText) successText.textContent = `Заказ успешно отправлен. После обработки мы свяжемся с вами для подтверждения.`;
   orderSuccess.classList.add('show');
@@ -701,9 +712,6 @@ if ('serviceWorker' in navigator) {
 render();
 updateCart();
 
-
-const menuBtn = document.querySelector('.menu-btn');
-const mobileMenu = document.getElementById('mobileMenu');
 
 
 /* ===== Главная: карусель ассортимента и счётчики ===== */

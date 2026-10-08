@@ -108,7 +108,6 @@ $headers = [
     'MIME-Version: 1.0',
     'Content-Type: text/plain; charset=UTF-8',
     'From: Чистая вода <' . $from . '>',
-    'Reply-To: ' . $from,
 ];
 
 $ok = @mail(

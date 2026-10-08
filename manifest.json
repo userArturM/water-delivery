@@ -21,5 +21,11 @@
       "type": "image/png",
       "purpose": "any"
     }
+  ],
+  "id": "./",
+  "orientation": "portrait-primary",
+  "categories": [
+    "shopping",
+    "food"
   ]
 }
