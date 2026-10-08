@@ -868,6 +868,8 @@ footer{position:relative;z-index:2}
   }
   .cart-panel #cartStepDetails .order-field{
     gap:3px;
+    min-width:0;
+    width:100%;
   }
   .cart-panel #cartStepDetails .order-field label{
     padding-left:5px;
@@ -880,10 +882,22 @@ footer{position:relative;z-index:2}
   .cart-panel #cartStepDetails .order-field input,
   .cart-panel #cartStepDetails .order-field select{
     min-height:40px;
+    min-width:0;
+    width:100%;
+    max-width:100%;
     padding:8px 13px;
     border-radius:12px;
     font-size:16px;
     line-height:1.2;
+  }
+  .cart-panel #cartStepDetails .order-field input[type="date"]{
+    display:block;
+    box-sizing:border-box;
+    overflow:hidden;
+  }
+  .cart-panel #cartStepDetails .order-field input[type="date"]::-webkit-date-and-time-value{
+    min-width:0;
+    text-align:left;
   }
   .cart-panel #cartStepDetails .phone-hint{
     padding-left:5px;
