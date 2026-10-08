@@ -565,7 +565,7 @@ try {
           io.unobserve(e.target);
         }
       });
-    }, { threshold: 0.12, rootMargin: '0px 0px -40px' });
+    }, { threshold: 0.04, rootMargin: '0px 0px -20px' });
   }
 } catch (err) { io = null; }
 
@@ -762,4 +762,11 @@ if (menuBtn && mobileMenu) menuBtn.addEventListener('click', () => mobileMenu.cl
       counters.forEach(el => io2.observe(el));
     }
   }
+})();
+
+/* Мобильное меню плавающее: закрываем его при прокрутке страницы */
+(function(){
+  const m = document.getElementById('mobileMenu');
+  if (!m) return;
+  window.addEventListener('scroll', () => { if (m.classList.contains('open') && window.scrollY > 60) m.classList.remove('open'); }, { passive: true });
 })();
