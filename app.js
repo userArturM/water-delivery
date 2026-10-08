@@ -764,3 +764,60 @@ const mobileMenu = document.getElementById('mobileMenu');
   }
 })();
 
+
+/* ===== Главная: карусель промо-блока воды ===== */
+(function initFeaturedWaterCarousel(){
+  const box = document.querySelector('.featured-box');
+  const title = document.getElementById('featuredTitle');
+  const text = document.getElementById('featuredText');
+  const badge = document.getElementById('featuredBadge');
+  const points = document.getElementById('featuredPoints');
+  const bottle = document.getElementById('featuredBottle');
+  const prev = document.getElementById('featuredPrev');
+  const next = document.getElementById('featuredNext');
+  const dots = document.getElementById('featuredDots');
+  if (!box || !title || !text || !badge || !points || !bottle || !prev || !next || !dots) return;
+
+  const slides = [
+    {
+      name:'Белая рука', badge:'Новинка', title:'Белая<br/><strong>рука</strong>',
+      text:'Новинка в нашем ассортименте — питьевая вода 19 литров для дома, офиса и ежедневного использования.',
+      points:['19 литров','Без газа','Для дома и офиса'], img:'assets/water/belaya-ruka.webp'
+    },
+    {
+      name:'Кристальная', badge:'Чаще всего берут', title:'Кристальная<br/><strong>вода</strong>',
+      text:'Проверенный выбор для дома и офиса. Чистая питьевая вода 19 литров — отличный вариант на каждый день.',
+      points:['19 литров','Без газа','Популярный выбор'], img:'assets/water/kristalnaya.webp'
+    },
+    {
+      name:'Дышэпс', badge:'Новинка', title:'Дышэпс<br/><strong>вода</strong>',
+      text:'Новинка с мягким вкусом и приятным составом. Подходит для ежедневного питья дома и на работе.',
+      points:['19 литров','Без газа','Новинка'], img:'assets/water/dysheps.webp'
+    }
+  ];
+  let index = 0;
+  slides.forEach((s,i)=>{
+    const d=document.createElement('button'); d.type='button'; d.className='featured-dot'+(i===0?' active':''); d.setAttribute('aria-label',s.name); d.addEventListener('click',()=>go(i)); dots.appendChild(d);
+  });
+  const dotEls=[...dots.children];
+  function render(animate=true){
+    const s=slides[index];
+    if(animate){ box.classList.remove('is-changing'); void box.offsetWidth; box.classList.add('is-changing'); }
+    badge.textContent=s.badge;
+    title.innerHTML=s.title;
+    text.textContent=s.text;
+    points.innerHTML=s.points.map(x=>`<span>${x}</span>`).join('');
+    bottle.src=s.img; bottle.alt=s.name+' 19 литров';
+    dotEls.forEach((d,i)=>d.classList.toggle('active',i===index));
+    prev.disabled=false; next.disabled=false;
+  }
+  function go(i){ index=(i+slides.length)%slides.length; render(true); }
+  prev.addEventListener('click',()=>go(index-1));
+  next.addEventListener('click',()=>go(index+1));
+  box.addEventListener('keydown',e=>{if(e.key==='ArrowLeft')go(index-1); if(e.key==='ArrowRight')go(index+1);});
+  box.tabIndex=0;
+  let startX=null;
+  box.addEventListener('touchstart',e=>{startX=e.changedTouches[0].clientX},{passive:true});
+  box.addEventListener('touchend',e=>{if(startX===null)return; const dx=e.changedTouches[0].clientX-startX; if(Math.abs(dx)>45)go(index+(dx<0?1:-1)); startX=null;},{passive:true});
+  render(false);
+})();
