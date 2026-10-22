@@ -165,7 +165,15 @@ const LS = 'cw_order_v3';
 try { localStorage.removeItem('cw_order_v2'); localStorage.removeItem('cw_last_order_v1'); } catch(e) {}
 let saved = {};
 try { saved = JSON.parse(localStorage.getItem(LS) || '{}'); } catch(e) {}
-if (saved.qty) Object.assign(qty, saved.qty);
+function restoreQuantities(source) {
+  if (!source || typeof source !== 'object') return;
+  waters.forEach((_, i) => {
+    const value = Number(source[i]);
+    qty[i] = Number.isFinite(value) ? Math.min(99, Math.max(0, Math.floor(value))) : 0;
+  });
+}
+if (!saved || typeof saved !== 'object') saved = {};
+restoreQuantities(saved.qty);
 if (saved.mode === 'store' || saved.mode === 'delivery') mode = saved.mode;
 if (saved.town && TOWNS[saved.town]) town = saved.town;
 
@@ -203,13 +211,8 @@ const personalConsent = document.getElementById('personalConsent');
 const privacyConsent = document.getElementById('privacyConsent');
 const offerConsent = document.getElementById('offerConsent');
 
-/* Любая из галочек синхронно отмечает/снимает весь блок согласий. */
+// Each consent remains an independent, explicit choice.
 const consentChecks = [personalConsent, privacyConsent, offerConsent].filter(Boolean);
-consentChecks.forEach(check => {
-  check.addEventListener('change', () => {
-    consentChecks.forEach(item => { item.checked = check.checked; });
-  });
-});
 
 const successText = document.getElementById('successText');
 const emailOrder = document.getElementById('emailOrder');
@@ -251,8 +254,15 @@ function control(i) {
 
 function render() {
   if (!grid) return;
-  grid.innerHTML = waters.map((w, i) => {
-    if (!inCat(w)) return '';
+  const query = (document.getElementById('catalogSearch')?.value || '').trim().toLocaleLowerCase('ru');
+  const sort = document.getElementById('catalogSort')?.value || 'default';
+  const items = waters.map((w, i) => ({w, i})).filter(({w}) => inCat(w) && (w[1] + ' ' + w[2]).toLocaleLowerCase('ru').includes(query));
+  if (sort === 'price-asc') items.sort((a,b) => priceOf(a.w) - priceOf(b.w));
+  if (sort === 'price-desc') items.sort((a,b) => priceOf(b.w) - priceOf(a.w));
+  if (sort === 'name') items.sort((a,b) => a.w[1].localeCompare(b.w[1], 'ru'));
+  const result = document.getElementById('catalogResult');
+  if (result) result.textContent = `Найдено товаров: ${items.length}`;
+  grid.innerHTML = items.map(({w, i}) => {
     return `
     <article class="card reveal" style="transition-delay:${(i % 4) * 0.06}s">
       <div class="photo">
@@ -277,6 +287,12 @@ function render() {
       </div>
     </article>`;
   }).join('');
+  if (!items.length) grid.innerHTML = '<div class="catalog-empty"><b>Ничего не найдено</b><p>Попробуйте другое название или выберите категорию «Все».</p><button type="button" id="resetSearch" class="btn-primary">Сбросить фильтры</button></div>';
+  document.getElementById('resetSearch')?.addEventListener('click', () => {
+    document.getElementById('catalogSearch').value = ''; cat = 'all';
+    document.querySelectorAll('#catSwitch button').forEach(b => b.classList.toggle('active', b.dataset.cat === cat));
+    render();
+  });
   observe(grid.querySelectorAll('.reveal'));
 }
 
@@ -303,7 +319,7 @@ const TOWN_MIN_BOTTLES = { plastunovskaya: 2, dinskaya: 3, ukrainskaya: 3 };
 function minBottles() {
   return mode === 'delivery' ? (TOWN_MIN_BOTTLES[town] || 2) : 2;
 }
-function bottlesWord(n) { return n === 1 ? 'бутыль' : (n < 5 ? 'бутыли' : 'бутылей'); }
+function bottlesWord(n) { const x = n % 100, y = n % 10; return x >= 11 && x <= 14 ? 'бутылей' : y === 1 ? 'бутыль' : y >= 2 && y <= 4 ? 'бутыли' : 'бутылей'; }
 function minText() { const n = minBottles(); return `Минимальный заказ — ${n} ${bottlesWord(n)} воды`; }
 function bottleCount() {
   return waters.reduce((s, w, i) => s + (isWater(w) ? (Number(qty[i]) || 0) : 0), 0);
@@ -363,6 +379,8 @@ function updateCart() {
   if (minEl) minEl.textContent = minText();
   const ts = document.getElementById('townSwitch');
   if (ts) ts.hidden = mode !== 'delivery';
+  const cartTown = document.getElementById('cartTown');
+  if (cartTown) { cartTown.value = town; cartTown.closest('.cart-location').hidden = mode !== 'delivery'; }
   const tsel = document.getElementById('townSelect');
   if (tsel && tsel.value !== town) tsel.value = town;
   if (cartProducts) cartProducts.innerHTML = productHtml.length ? productHtml.join('') : '<div class="cart-empty">Товары не выбраны</div>';
@@ -416,6 +434,7 @@ function openCart() {
   cartStepProducts.hidden = false;
   cartStepDetails.hidden = true;
   cartTitle.textContent = 'Ваша корзина';
+  cartPanel.inert = false;
   cartPanel.classList.add('open');
   cartBackdrop.classList.add('open');
   document.body.style.overflow = 'hidden';
@@ -426,6 +445,7 @@ let lastFocus = null;
 function closeCart() {
   if (!cartPanel) return;
   const wasOpen = cartPanel.classList.contains('open');
+  cartPanel.inert = true;
   cartPanel.classList.remove('open');
   cartBackdrop.classList.remove('open');
   document.body.style.overflow = '';
@@ -470,10 +490,15 @@ async function sendOrderCopyByEmail() {
     data.append('offer_version', '2026-10-04');
     data.append('consent_at_client', new Date().toISOString());
     data.append('website', '');
-    const res = await fetch('./send-order.php', {
-      method: 'POST', body: data, keepalive: true, credentials: 'same-origin'
-    });
-    return res.ok || res.status === 204;
+    const controller = new AbortController();
+    const timeout = setTimeout(() => controller.abort(), 20000);
+    try {
+      const res = await fetch('./send-order.php', {
+        method: 'POST', body: data, credentials: 'same-origin', signal: controller.signal
+      });
+      // The PHP endpoint's contract is 204; a static host's HTML 200 is not a sent order.
+      return res.status === 204;
+    } finally { clearTimeout(timeout); }
   } catch (_) {
     return false;
   }
@@ -492,6 +517,7 @@ document.addEventListener('click', e => {
   const b = e.target.closest('[data-cart]');
   if (!b) return;
   const i = Number(b.dataset.i);
+  if (!Number.isInteger(i) || !waters[i]) return;
   const action = b.dataset.cart;
   if (action === 'remove') {
     qty[i] = 0;
@@ -499,7 +525,7 @@ document.addEventListener('click', e => {
     return;
   }
   const wasZero = !(qty[i] || 0);
-  qty[i] = Math.max(0, (qty[i] || 0) + (action === 'plus' ? 1 : -1));
+  qty[i] = Math.min(99, Math.max(0, (qty[i] || 0) + (action === 'plus' ? 1 : -1)));
   if (action === 'plus' && wasZero) flyToCart(b);
   if (action === 'plus' && wasZero) goal('add_to_cart');
   updateCart();
@@ -510,7 +536,7 @@ document.addEventListener('click', e => {
   if (!b) return;
   const i = waters.findIndex(w => w[0] === b.dataset.quickAdd);
   if (i < 0) return;
-  qty[i] = (qty[i] || 0) + 1;
+  qty[i] = Math.min(99, (qty[i] || 0) + 1);
   updateCart();
   goal('quick_add_to_cart');
   toast(`Добавлено в корзину: ${waters[i][1]}`);
@@ -607,6 +633,7 @@ document.addEventListener('keydown', e => {
 if (emailOrder) {
   emailOrder.addEventListener('click', async e => {
     e.preventDefault();
+    if (emailOrder.disabled) return;
     const bad = (el, msg) => { el.style.borderColor = '#d33'; el.focus(); toast(msg); };
     if (bottleCount() < minBottles()) { toast(minText()); return; }
     if (!personalConsent?.checked) { toast('Подтвердите согласие на обработку персональных данных'); personalConsent?.focus(); return; }
@@ -615,13 +642,19 @@ if (emailOrder) {
     if (mode === 'delivery') {
       if (!orderAddress.value.trim()) return bad(orderAddress, 'Укажите адрес доставки');
       if (!orderDate.value) return bad(orderDate, 'Выберите дату доставки');
+      const localToday = new Date().toLocaleDateString('sv-SE');
+      if (orderDate.value < localToday) return bad(orderDate, 'Выберите сегодняшнюю или будущую дату');
     }
     if (orderPhone.value.replace(/\D/g, '').length < 11) return bad(orderPhone, 'Укажите телефон полностью: +7 (999) 123-45-67');
 
+    if (!orderPayment.value) return bad(orderPayment, 'Выберите способ оплаты');
+    updateCart();
     emailOrder.disabled = true;
+    emailOrder.textContent = 'Отправляем…';
     emailOrder.classList.add('is-loading');
     const sent = await sendOrderCopyByEmail();
     emailOrder.disabled = false;
+    emailOrder.textContent = 'Отправить заявку';
     emailOrder.classList.remove('is-loading');
 
     if (!sent) {
@@ -669,7 +702,7 @@ if (successRepeat) successRepeat.addEventListener('click', () => {
     const last = JSON.parse(localStorage.getItem('cw_last_order_v2') || 'null');
     if (!last || !last.qty) { toast('Последний заказ ещё не сохранён'); return; }
     Object.keys(qty).forEach(k => qty[k] = 0);
-    Object.assign(qty, last.qty);
+    restoreQuantities(last.qty);
     mode = last.mode === 'store' ? 'store' : 'delivery';
     if (last.town && TOWNS[last.town]) town = last.town;
     document.querySelectorAll('#modeSwitch button').forEach(b => b.classList.toggle('active', b.dataset.mode === mode));
@@ -698,7 +731,7 @@ function showSuccess() {
 }
 function hideSplash() {
   const s = document.getElementById('splash');
-  if (s) setTimeout(() => s.classList.add('hide'), 650);
+  if (s) s.remove();
 }
 hideSplash();
 
@@ -829,3 +862,20 @@ updateCart();
   box.addEventListener('touchend',e=>{if(startX===null)return; const dx=e.changedTouches[0].clientX-startX; if(Math.abs(dx)>45)go(index+(dx<0?1:-1)); startX=null;},{passive:true});
   render(false);
 })();
+
+// Catalog tools use product identities, independent of sorting and filtering.
+document.getElementById('catalogSearch')?.addEventListener('input', render);
+document.getElementById('catalogSort')?.addEventListener('change', render);
+document.getElementById('cartTown')?.addEventListener('change', e => {
+  if (!TOWNS[e.target.value]) return;
+  town = e.target.value; render(); updateCart();
+});
+document.addEventListener('keydown', e => {
+  if (e.key !== 'Tab' || !cartPanel?.classList.contains('open')) return;
+  const focusable = [...cartPanel.querySelectorAll('button, a[href], input, select, [tabindex="0"]')].filter(el => !el.disabled && el.getClientRects().length);
+  const first = focusable[0], last = focusable.at(-1);
+  if (e.shiftKey && (document.activeElement === first || !cartPanel.contains(document.activeElement))) { e.preventDefault(); last?.focus(); }
+  else if (!e.shiftKey && (document.activeElement === last || !cartPanel.contains(document.activeElement))) { e.preventDefault(); first?.focus(); }
+});
+window.addEventListener('offline', () => toast('Нет подключения. Каталог доступен, для отправки заказа нужен интернет.'));
+window.addEventListener('online', () => toast('Подключение восстановлено'));

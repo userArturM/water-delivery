@@ -1,8 +1,9 @@
-<!doctype html><html lang="ru"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover"><meta name="theme-color" content="#55B2BA"><meta name="description" content="Телефон +7 928 223-53-33. Самовывоз: станица Пластуновская, ул. Красная, 250. Доставка воды 19 л в Пластуновской, Динской и Украинской."><title>Контакты — Чистая вода, станица Пластуновская, ул. Красная, 250</title><script>document.documentElement.classList.add('js')</script>
+<!doctype html><html lang="ru"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover"><meta name="theme-color" content="#eaf2f8"><meta name="description" content="Телефон +7 928 223-53-33. Самовывоз: станица Пластуновская, ул. Красная, 250. Доставка воды 19 л в Пластуновской, Динской и Украинской."><title>Контакты — Чистая вода, станица Пластуновская, ул. Красная, 250</title><script>document.documentElement.classList.add('js')</script>
     <link rel="manifest" href="manifest.json"><link rel="canonical" href="https://xn----7sbbhku9buj1cwf.site/contacts.html"><meta property="og:type" content="website"><meta property="og:locale" content="ru_RU"><meta property="og:site_name" content="Чистая вода"><meta property="og:title" content="Контакты — Чистая вода, станица Пластуновская, ул. Красная, 250"><meta property="og:description" content="Телефон +7 928 223-53-33. Самовывоз: станица Пластуновская, ул. Красная, 250. Доставка воды 19 л в Пластуновской, Динской и Украинской."><meta property="og:url" content="https://xn----7sbbhku9buj1cwf.site/contacts.html"><meta property="og:image" content="https://xn----7sbbhku9buj1cwf.site/assets/bottles.webp"><link rel="apple-touch-icon" href="assets/icon-192.png"><link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin><link href="https://fonts.googleapis.com/css2?family=Rubik:wght@400;500;600&amp;family=Unbounded:wght@600;700;800;900&amp;display=swap" rel="stylesheet"><link rel="stylesheet" href="styles.css">
+<link rel="stylesheet" href="premium.css">
     <link rel="icon" type="image/x-icon" href="favicon.ico">
     <link rel="icon" type="image/png" sizes="120x120" href="favicon.png">
-</head><body><div class="page"><header class="hero hero--inner" id="top">
+</head><body><a class="skip-link" href="#route">Перейти к содержимому</a><div class="page"><header class="hero hero--inner" id="top">
 <div class="hero-bg" aria-hidden="true"><img class="hero-splash" src="assets/hero-splash.svg" alt="" width="900" height="900"></div>
 <div class="container hero-inner">
 <div class="topbar">
@@ -18,7 +19,7 @@
 
 </div>
 </header>
-<div class="mobile-menu" id="mobileMenu" aria-hidden="true"><a href="index.html">Главная</a><a href="catalog.html">Каталог</a><a href="about.html">О компании</a><a href="delivery.html">Доставка</a><a href="faq.html">FAQ</a><a href="contacts.html">Контакты</a></div><section class="why ct" id="route">
+<div class="mobile-menu" id="mobileMenu" aria-hidden="true"><a href="index.html">Главная</a><a href="catalog.html">Каталог</a><a href="about.html">О компании</a><a href="delivery.html">Доставка</a><a href="faq.html">FAQ</a><a href="contacts.html">Контакты</a></div><section id="route" tabindex="-1" class="why ct">
 <div class="container">
 <div class="why-head">
 <div><div class="why-kicker"><span></span> Контакты</div><h1 class="ct-h1">Как нас<br/><strong>найти?</strong></h1></div>
@@ -49,12 +50,12 @@
 <span class="fab-count" id="fabCount">0</span>
 </button>
 <div class="cart-backdrop" id="cartBackdrop"></div>
-<div aria-label="Корзина" aria-modal="true" class="cart-panel" id="cartPanel" role="dialog">
+<div aria-label="Корзина" aria-modal="true" class="cart-panel" id="cartPanel" role="dialog" aria-labelledby="cartTitle" inert>
 <div class="cart-header"><h3 id="cartTitle">Ваша корзина</h3><button type="button" aria-label="Закрыть" class="cart-close-btn" id="cartClose">×</button></div>
 <div class="cart-body">
 <div id="cartStepProducts">
 <button class="cart-clear" id="cartClear" type="button">Очистить корзину</button>
-<div id="cartProducts"></div>
+<div class="cart-location"><label for="cartTown">Доставка в</label><select id="cartTown"><option value="plastunovskaya">Пластуновскую</option><option value="dinskaya">Динскую</option><option value="ukrainskaya">Украинскую</option></select><p>Цена и минимальный заказ зависят от адреса доставки.</p></div><div id="cartProducts"></div>
 <div class="cart-summary"><span>Итого</span><b id="cartTotal">0 ₽</b></div>
 <button class="cart-next-btn" id="cartNext" type="button">Далее →</button>
 </div>
@@ -74,7 +75,7 @@
 <label class="legal-check"><input id="offerConsent" type="checkbox" aria-required="true"> <span>Я ознакомился с <a href="offer.html" target="_blank" rel="noopener">Публичной офертой</a> и условиями заказа.</span></label>
 </div>
 </div>
-<div class="messenger-row"><button class="msg-btn msg-order" id="emailOrder" type="button">Заказать</button></div>
+<div class="messenger-row"><button class="msg-btn msg-order" id="emailOrder" type="button">Отправить заявку</button></div>
 </div>
 </div>
 </div>
@@ -82,6 +83,6 @@
 <a aria-label="Позвонить" class="call-fab" href="tel:+79282235333">☎</a>
 </div>
 <div class="order-success" id="orderSuccess">
-<div class="success-card"><div class="success-icon">✓</div><h3>Заказ успешно отправлен</h3><p>Заказ успешно отправлен. После обработки мы свяжемся с вами для подтверждения.</p><div class="success-actions"><a class="success-call" href="tel:+79282235333">Позвонить</a><button class="success-close" id="successClose" type="button">Вернуться на сайт</button></div></div>
+<div class="success-card"><div class="success-icon">✓</div><h3>Заявка отправлена</h3><p>Заявка отправлена. После обработки мы свяжемся с вами для подтверждения.</p><div class="success-actions"><a class="success-call" href="tel:+79282235333">Позвонить</a><button class="success-close" id="successClose" type="button">Вернуться на сайт</button></div></div>
 </div>
-<div aria-hidden="true" class="splash" id="splash"><div class="splash-inner"><img width="512" height="512" alt="" class="splash-logo" src="assets/logo.png"/><b>Чистая вода</b><span>доставка 19 л</span></div></div><div id="toast" role="alert"></div><script src="menu.js"></script><script src="app.js"></script></body></html>
+<div aria-hidden="true" class="splash" id="splash"><div class="splash-inner"><img width="512" height="512" alt="" class="splash-logo" src="assets/logo.png"/><b>Чистая вода</b><span>доставка 19 л</span></div></div><div id="toast" role="status" aria-live="polite"></div><script src="menu.js"></script><script src="app.js"></script></body></html>
