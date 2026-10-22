@@ -1,4 +1,4 @@
-const CACHE = 'clean-water-v21-20261008';
+const CACHE = 'clean-water-v22-20261022';
 const APP = [
   './',
   'index.html',
@@ -16,6 +16,7 @@ const APP = [
   '404.html',
   'manifest.json',
   'styles.css',
+  'premium.css',
   'app.js',
   'menu.js',
   'assets/icon-192.png',
@@ -50,7 +51,7 @@ self.addEventListener('install', event => {
 
 self.addEventListener('activate', event => {
   event.waitUntil(
-    caches.keys().then(keys => Promise.all(keys.filter(k => k !== CACHE).map(k => caches.delete(k))))
+    caches.keys().then(keys => Promise.all(keys.filter(k => k.startsWith('clean-water-') && k !== CACHE).map(k => caches.delete(k))))
       .then(() => self.clients.claim())
   );
 });

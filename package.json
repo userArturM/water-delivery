@@ -1,0 +1,1 @@
+{"name":"clean-water-site","version":"2.2.0","private":true,"scripts":{"test":"node tests/browser.cjs","check":"node --check app.js && node --check menu.js && node --check sw.js"},"devDependencies":{"playwright":"1.62.1"}}
